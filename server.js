@@ -4,7 +4,7 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 
-const demo = _.times(100, n => ({
+const demo = _.times(10000, n => ({
   _id: n + 1,
   title: faker.lorem.sentence(),
 }))
