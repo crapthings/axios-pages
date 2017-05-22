@@ -1,20 +1,33 @@
 import _ from 'lodash'
 
+import concat from 'lodash/concat'
+import compact from 'lodash/compact'
+import extend from 'lodash/extend'
+import find from 'lodash/find'
+import flatten from 'lodash/flatten'
+import get from 'lodash/get'
+import isEmpty from 'lodash/isEmpty'
+import map from 'lodash/map'
+import set from 'lodash/set'
+import times from 'lodash/times'
+
 import axios from 'axios'
 
 // 连续
 async function fetchSeries(results = [], acc = [], url, options = {}, config = {}) {
 
-  const index = config.pageIndexAmount += 1
+  const _options = extend({}, options)
 
-  _.set(options, `params.${config.pageIndexField}`, index)
-  _.set(options, `params.${config.perPageField}`, config.perPageAmount)
+  const pageIndex = config.pageIndexAmount += 1
 
-  acc = _.concat(acc, results)
+  set(_options, config.pageIndexField, pageIndex)
+  set(_options, config.perPageField, config.perPageAmount)
 
-  const request = await axios(url, options)
+  acc = concat(acc, results)
 
-  const _results = _.get(request, config.resultField, [])
+  const request = await axios(url, _options)
+
+  const _results = get(request, config.resultField, [])
 
   return _results.length ? await fetchSeries(_results, acc, url, options, config) : acc
 
@@ -23,29 +36,29 @@ async function fetchSeries(results = [], acc = [], url, options = {}, config = {
 // 连续并发
 async function fetchParallel(results = [], acc = [], url, options = {}, config = {}) {
 
-  acc = _.concat(acc, results)
+  acc = concat(acc, results)
 
-  const parallel = _.times(config.concurrent, n => {
+  const parallel = times(config.concurrent, n => {
     const index = config.pageIndexAmount += 1
 
     const _options = {}
 
-    _.set(_options, config.pageIndexField, index)
-    _.set(_options, config.perPageField, config.perPageAmount)
+    set(_options, config.pageIndexField, index)
+    set(_options, config.perPageField, config.perPageAmount)
 
     return axios(url, _options)
   })
 
   const request = await axios.all(parallel)
 
-  const unflattenResults = _.map(request, config.resultField)
+  const unflattenResults = map(request, config.resultField)
 
-  const findEmptyData = _.find(unflattenResults, _.isEmpty)
+  const findEmptyData = find(unflattenResults, isEmpty)
 
-  const _results = _.compact(_.flatten(unflattenResults))
+  const _results = compact(flatten(unflattenResults))
 
   return findEmptyData
-    ? _.concat(acc, _results)
+    ? concat(acc, _results)
     : await fetchParallel(_results, acc, url, options, config)
 
 }
@@ -56,10 +69,10 @@ async function fetchParallel(results = [], acc = [], url, options = {}, config =
 
   const dataFetchSeries = await fetchSeries([], [], 'http://localhost:4000/api/test', {}, {
     resultField: 'data',
-    pageIndexField: 'page',
+    pageIndexField: 'params.page',
     pageIndexAmount: 0,
-    perPageField: 'per_page',
-    perPageAmount: 10,
+    perPageField: 'params.per_page',
+    perPageAmount: 6,
     concurrent: 3,
   })
 
