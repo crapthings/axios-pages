@@ -1,33 +1,38 @@
-import _ from 'lodash'
-import faker from 'faker'
-import express from 'express'
-import bodyParser from 'body-parser'
-import cors from 'cors'
+import {
+  fetchSeries,
+  fetchParallel,
+} from './src'
 
-const demo = _.times(100, n => ({
-  _id: n + 1,
-  title: faker.lorem.sentence(),
-}))
+(async function () {
 
-const app = express()
+  console.time('连续')
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+  const dataFetchSeries = await fetchSeries([], [], 'http://localhost:4000/api/test', {}, {
+    resultField: 'data',
+    pageIndexField: 'params.page',
+    pageIndexAmount: 0,
+    perPageField: 'params.per_page',
+    perPageAmount: 6,
+    concurrent: 3,
+  })
 
-app.use(cors())
+  console.timeEnd('连续')
 
-app.get('/api/test', function (req, res) {
-  const page = req.query.page ? parseInt(req.query.page) : 1
-  const per_page = req.query.per_page ? parseInt(req.query.per_page) : 10
+  console.log(dataFetchSeries.length)
 
-  const start = page == 1 ? 0 : page * per_page - per_page
-  const end = start + per_page
+  console.time('连续并发')
 
-  const data = _.slice(demo, start, end)
+  const dataFetchParallel = await fetchParallel([], [], 'http://localhost:4000/api/test', {}, {
+    resultField: 'data',
+    pageIndexField: 'params.page',
+    pageIndexAmount: 0,
+    perPageField: 'params.per_page',
+    perPageAmount: 10,
+    concurrent: 3,
+  })
 
-  res.json(data)
-})
+  console.timeEnd('连续并发')
 
-app.listen(4000, function () {
-  console.log('start at port', 4000)
-})
+  console.log(dataFetchParallel.length)
+
+})()
