@@ -11,57 +11,61 @@ import times from 'lodash/times'
 
 import axios from 'axios'
 
-// 连续
-async function fetchSeries(results = [], acc = [], url, options = {}, config = {}) {
+// serial
+export const fetchSerial = async function(url, options = {}, config = {}, acc = []) {
 
-  const _options = extend({}, options)
+  config.pageIndexAmount = config.pageIndexAmount || 0
 
   const pageIndex = config.pageIndexAmount += 1
+  const pageIndexField = 'params.' + config.pageIndexField
+  const perPageField = 'params.' + config.perPageField
 
-  set(_options, config.pageIndexField, pageIndex)
-  set(_options, config.perPageField, config.perPageAmount)
+  set(options, pageIndexField, pageIndex)
+  set(options, perPageField, config.perPageAmount)
 
-  acc = concat(acc, results)
+  const request = await axios(url, options)
 
-  const request = await axios(url, _options)
+  const resultField = config.resultField ? 'data.' + config.resultField : 'data'
 
-  const _results = get(request, config.resultField, [])
+  const _results = get(request, resultField, [])
 
-  return _results.length ? await fetchSeries(_results, acc, url, options, config) : acc
+  acc = concat(acc, _results)
+
+  return _results.length ? await fetchSerial(url, options, config, acc) : acc
 
 }
 
-// 连续并发
-async function fetchParallel(results = [], acc = [], url, options = {}, config = {}) {
+// parallel
+export const fetchParallel = async function(url, options = {}, config = {}, acc = []) {
 
-  acc = concat(acc, results)
+  config.pageIndexAmount = config.pageIndexAmount || 0
 
-  const parallel = times(config.concurrent, n => {
-    const index = config.pageIndexAmount += 1
+  const pageIndexField = 'params.' + config.pageIndexField
+  const perPageField = 'params.' + config.perPageField
+
+  const parallel = times(config.concurrent || 3, () => {
+    const pageIndex = config.pageIndexAmount += 1
 
     const _options = {}
 
-    set(_options, config.pageIndexField, index)
-    set(_options, config.perPageField, config.perPageAmount)
+    set(_options, pageIndexField, pageIndex)
+    set(_options, perPageField, config.perPageAmount)
 
     return axios(url, _options)
   })
 
   const request = await axios.all(parallel)
 
-  const unflattenResults = map(request, config.resultField)
+  const resultField = config.resultField ? 'data.' + config.resultField : 'data'
+
+  const unflattenResults = map(request, resultField)
 
   const findEmptyData = find(unflattenResults, isEmpty)
 
   const _results = compact(flatten(unflattenResults))
 
-  return findEmptyData
-    ? concat(acc, _results)
-    : await fetchParallel(_results, acc, url, options, config)
+  acc = concat(acc, _results)
 
-}
+  return findEmptyData ? acc : await fetchParallel(url, options, config, acc)
 
-export default {
-  fetchSeries,
-  fetchParallel,
 }
