@@ -1,0 +1,45 @@
+{
+  "name": "axios-pages",
+  "version": "0.0.1",
+  "description": "axios-pages",
+  "main": "dist/bundle.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "babel ./src --out-file ./dist/bundle.js --source-maps",
+    "demo": "babel-node ./src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crapthings/axios-pages.git"
+  },
+  "keywords": [
+    "fetch",
+    "rest",
+    "restapi",
+    "rest-api"
+  ],
+  "author": "crapthings",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/crapthings/axios-pages/issues"
+  },
+  "homepage": "https://github.com/crapthings/axios-pages#readme",
+  "dependencies": {
+    "axios": "^0.16.1",
+    "body-parser": "^1.17.2",
+    "cors": "^2.8.3",
+    "express": "^4.15.3",
+    "faker": "^4.1.0",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-preset-babili": "0.0.12",
+    "babel-preset-env": "^1.4.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.24.1"
+  }
+}
