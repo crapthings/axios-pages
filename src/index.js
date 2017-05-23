@@ -1,12 +1,12 @@
 import compact from 'lodash/compact'
 import concat from 'lodash/concat'
 import extend from 'lodash/extend'
-import find from 'lodash/find'
 import flatten from 'lodash/flatten'
 import get from 'lodash/get'
 import isEmpty from 'lodash/isEmpty'
 import map from 'lodash/map'
 import set from 'lodash/set'
+import some from 'lodash/some'
 import times from 'lodash/times'
 
 import axios from 'axios'
@@ -46,7 +46,7 @@ export const fetchParallel = async function(url, options = {}, config = {}, acc 
   const parallel = times(config.concurrent || 3, () => {
     const pageIndex = config.pageIndexAmount += 1
 
-    const _options = {}
+    const _options = _.defaultsDeep({}, options)
 
     set(_options, pageIndexField, pageIndex)
     set(_options, perPageField, config.perPageAmount)
@@ -60,7 +60,7 @@ export const fetchParallel = async function(url, options = {}, config = {}, acc 
 
   const unflattenResults = map(request, resultField)
 
-  const findEmptyData = find(unflattenResults, isEmpty)
+  const findEmptyData = some(unflattenResults, isEmpty)
 
   const _results = compact(flatten(unflattenResults))
 
